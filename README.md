@@ -1,233 +1,171 @@
-<div align="center">
-
-# 💱 FX Pulse — Real-Time Currency Converter & Travel Budget Engine
-
-[![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.115.0-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
-[![SQLite](https://img.shields.io/badge/SQLite-Local_Persistence-003B57?style=for-the-badge&logo=sqlite&logoColor=white)](https://www.sqlite.org/)
-[![TailwindCSS](https://img.shields.io/badge/Tailwind_CSS-UI-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
-[![Chart.js](https://img.shields.io/badge/Chart.js-30d_Trends-FF6384?style=for-the-badge&logo=chartdotjs&logoColor=white)](https://www.chartjs.org/)
-
-**A high-speed, server-driven currency conversion utility with 30-day historical trend visualization, SQLite caching, and simultaneous multi-currency Travel Budgeting.**
-
-[✨ Core Features](#-core-features) • [🏗️ System Architecture](#️-system-architecture) • [🚀 Quick Start](#-quick-start-in-60-seconds) • [📡 API Reference](#-interactive-api-reference) • [🧠 Engineering Decisions](#-interactive-engineering--viva-notes)
-
-</div>
-
----
-
-## ✨ Core Features
-
-| Feature Module | Engineering Implementation | User Experience |
-| :--- | :--- | :--- |
-| **🔄 Dual Currency Converter** | Strict server-side validation via Pydantic v2 & live rate resolution via **ExchangeRate API**. | Side-by-side Source & Target currency selectors, instant swap (`⇄`), and inverse rate breakdown. |
-| **📈 30-Day Trend Analytics** | Backend time-series aggregation computing 30-day `min`, `max`, and `% change` metrics. | Interactive **Chart.js** area-line graph visualizing daily exchange rate volatility. |
-| **⭐ Favorites Quick-Bar** | Persistent **SQLite** storage with unique pair constraints (`UNIQUE(source, target)`). | One-click pill selectors to switch currency pairs or add/remove frequent pairs in real time. |
-| **🗄️ Local Conversion History** | Automated **SQLite** write-through logging + 15-minute TTL rate caching (`rate_cache`). | Live-updating audit table displaying the 10 most recent conversions with zero latency. |
-| **✈️ "The Vibe Check": Travel Budgeting Mode** | Simultaneous server-side matrix computation across **5 major global currencies** (`USD`, `EUR`, `GBP`, `JPY`, `AUD`/`CAD`). | Dedicated toggle mode rendering an instant 5-currency purchasing power comparison table. |
-
----
-
-## 🏗️ System Architecture
-
-All business logic, input validations, financial calculations, and third-party API integrations are strictly decoupled and executed on the **FastAPI backend**. The frontend acts purely as a lightweight presentation and interaction layer.
-
-```mermaid
-flowchart LR
-    subgraph Frontend ["Frontend Presentation Layer (HTML5 + Tailwind + Chart.js)"]
-        UI[Dual Converter & Travel Toggle]
-        Chart[30-Day Trend Canvas]
-        FavUI[Favorites & History View]
+💱 FX PulseReal-Time Currency Converter & Travel Budget UtilityA high-performance, server-driven currency conversion platform featuring 30-day historical trend visualization, SQLite caching, and multi-currency travel budgeting.Problem Statement • The Solution • Visual Preview • Tech Stack • Architecture • Getting Started • API Reference📌 Problem StatementIn global commerce and international travel, users require accurate exchange conversions, clear historical trend visualization, and rapid purchasing-power estimation across multiple currencies simultaneously.Core Assessment RequirementsDual Converter Interface: Side-by-side dropdown selectors for Source and Target currencies with real-time numeric conversion.30-Day Trend Visualization: Interactive graphical visualization of historical exchange rate movements across the preceding 30 days.Favorites Management: Fast bookmarking and one-click selection of frequently paired currencies.The Vibe Check ("Travel Budgeting" Mode): A dedicated travel mode that accepts a base budget and simultaneously computes converted values across 5 major global currencies (USD, EUR, GBP, JPY, AUD/CAD) in a clean comparison table.Live API Integration: Real-time spot exchange rate ingestion via the ExchangeRate API.Local Persistence via SQLite: Caching conversion histories, user favorite pairs, and rate responses locally to prevent API quota exhaustion.Strict Architectural Constraint: Zero client-side computation. All financial math, input validation, date-series generation, and currency matrix computations must execute exclusively on the server backend.💡 The SolutionFX Pulse is engineered as a decoupled, 3-tier application designed for low latency and high resilience:Backend-Heavy Logic: Built on FastAPI and Pydantic v2. Every arithmetic calculation (amount conversions, inverse rates, 30-day statistics, and travel allocations) runs in Python.Persistent SQLite Layer: Utilizes a local SQLite database (currency_converter.db) with three tables (favorites, conversion_history, and rate_cache). The rate cache applies a 15-minute TTL (Time-To-Live) to ensure rapid response times (< 2ms) and safeguard third-party API quotas.Resilient Historical Series: Integrates time-series queries with a deterministic mathematical fallback anchored to live spot rates, ensuring that charting never breaks even if third-party historical endpoints experience downtime.Zero-Build Presentation Layer: Implemented using pure HTML5, Tailwind CSS (via CDN), and vanilla JavaScript. The frontend is purely a presentation boundary that handles user inputs and renders server responses.🖥️ Visual Preview & Working DemoApplication Interface & Dual Workflow+----------------------------------------------------------------------------------------------------+
+| [FX] Real-Time Currency Converter                         [✈️ Travel Budgeting Mode: [ Toggle ]]  |
++----------------------------------------------------------------------------------------------------+
+|  ★ FAVORITE PAIRS:  [ USD -> INR (x) ]  [ EUR -> USD (x) ]  [ GBP -> INR (x) ]   [+ Save Current]  |
++----------------------------------------------------------------------------------------------------+
+|                                                  |                                                 |
+|  DUAL CONVERTER CARD                             |  30-DAY EXCHANGE RATE TREND                     |
+|  -------------------                             |  --------------------------                     |
+|  Amount:  [ 250.00                             ] |  USD -> INR (30 Days)  [Min: 83.41 | Max: 84.12]|
+|                                                  |                                                 |
+|  Source: [ USD  v ]  [ <-> ]  Target: [ INR  v ] |    Rate                                         |
+|                                                  |   84.2 |            /\                          |
+|  [         CONVERT CURRENCY BUTTON             ] |   83.8 |      /\   /  \    /\                   |
+|                                                  |   83.4 |_____/  \_/    \__/  \___________       |
+|  +--------------------------------------------+  |          10-Oct      20-Oct      Today          |
+|  | Converted Amount:                          |  |                                                 |
+|  | 20,987.50 INR                              |  |  * Rendered via Chart.js from backend series   |
+|  | Rate: 1 USD = 83.95 INR | Inv: 0.011912   |  +-------------------------------------------------+
+|  +--------------------------------------------+  |                                                 |
+|                                                  |  RECENT CONVERSIONS (SQLite Audit Log)          |
+|                                                  |  -------------------------------------          |
+|                                                  |  PAIR        INPUT        OUTPUT        RATE    |
+|                                                  |  USD/INR     250 USD      20,987.50     83.95   |
+|                                                  |  EUR/USD     100 EUR      108.45 USD    1.0845  |
++--------------------------------------------------+-------------------------------------------------+
+UI Screenshot:
+Place your live application screenshot at docs/assets/demo_screenshot.png to display it automatically:🛠️ Tech StackBackend & Core ServicesLanguage: Python 3.10+Framework: FastAPI (Asynchronous Web Framework)ASGI Server: Uvicorn (High-performance worker)Validation & Schemas: Pydantic v2 (Strict type constraints & custom field validators)HTTP Client: HTTPX (Asynchronous non-blocking HTTP requests)Database Engine: SQLite3 (Built-in zero-config relational database)Frontend & Data VisualizationMarkup & Structure: Semantic HTML5Styling Framework: Tailwind CSS CDN (Utility-first styling)Data Visualization: Chart.js CDN (Responsive canvas charting)Client Scripting: Vanilla JavaScript (ES6+ fetch API, no client arithmetic)Data ProvidersLive Exchange Rates: ExchangeRate-APIHistorical Time Series: Frankfurter API (with resilient server fallback)🏛️ System Architectureflowchart TD
+    subgraph Client ["Client Presentation Layer (Browser)"]
+        UI["DOM View & User Controls"]
+        ChartUI["Chart.js Trend Visualization"]
+        HistoryUI["History & Favorites UI"]
     end
 
-    subgraph Backend ["FastAPI Server-Side Engine (Python)"]
-        Router[REST API Router /api/*]
-        Schema[Pydantic v2 Validation]
-        Service[FX & Travel Calculation Engine]
+    subgraph Server ["FastAPI Server-Side Logic (Zero Client-Side Math)"]
+        API["REST Endpoints (/api/*)"]
+        Validation["Pydantic v2 Input Validation"]
+        Service["FX Calculation & Trend Engine"]
     end
 
-    subgraph Storage ["Persistence & External Data"]
-        DB[(SQLite3 Database\n• favorites\n• conversion_history\n• rate_cache)]
-        API((ExchangeRate API\n& Historical Series))
+    subgraph Data ["Data & Storage Layer"]
+        DB[("SQLite Database\n(currency_converter.db)")]
+        ExternalAPI["Live ExchangeRate API"]
     end
 
-    UI -->|JSON Request| Router
-    Router --> Schema
-    Schema --> Service
-    Service <-->|Read/Write Cache & Logs| DB
-    Service <-->|Fetch Live Rates| API
-    Service -->|Computed Payload| Chart
-    Service -->|Updated State| FavUI
-```
-
-### 📂 Repository Structure
-
-```text
-currency-converter/
+    UI -->|1. Submit User Action| API
+    API -->|2. Validate Input| Validation
+    Validation -->|3. Route to FX Engine| Service
+    Service <-->|4. Read/Write 15m Cache & Logs| DB
+    Service <-->|5. Fetch Live Rates (on Cache Miss)| ExternalAPI
+    Service -->|6. Return JSON Computed Results| UI
+    Service -->|7. Return 30d Series Array| ChartUI
+    Service -->|8. Push SQLite Record| HistoryUI
+🗄️ Database Design (SQLite Persistence)All application data is maintained in the local SQLite database (currency_converter.db) initialized via app/database.py:┌──────────────────────────────────────┐        ┌──────────────────────────────────────────────┐
+│              favorites               │        │              conversion_history              │
+├──────────────────────────────────────┤        ├──────────────────────────────────────────────┤
+│ id              INTEGER (PK, AUTO)   │        │ id              INTEGER (PK, AUTO)           │
+│ source_currency TEXT                 │        │ source_currency TEXT                         │
+│ target_currency TEXT                 │        │ target_currency TEXT                         │
+│ created_at      TIMESTAMP            │        │ amount          REAL                         │
+│ CONSTRAINT: UNIQUE(source, target)   │        │ converted_amount REAL                        │
+└──────────────────────────────────────┘        │ exchange_rate   REAL                         │
+                                                │ created_at      TIMESTAMP                    │
+┌──────────────────────────────────────┐        └──────────────────────────────────────────────┘
+│              rate_cache              │
+├──────────────────────────────────────┤
+│ base_currency   TEXT (PK)            │
+│ rates_json      TEXT                 │
+│ updated_at      REAL (Epoch)         │
+└──────────────────────────────────────┘
+📁 Project Directory Structurecurrency-converter/
 ├── app/
 │   ├── __init__.py
-│   ├── main.py              # FastAPI lifecycle, CORS, and static asset mounting
-│   ├── config.py            # Environment settings, cache TTL, and global currency constants
-│   ├── database.py          # SQLite3 connection manager, schema init, and CRUD helpers
-│   ├── schemas.py           # Strict server-side Pydantic v2 request/response validators
+│   ├── main.py              # Application lifecycle, CORS, static mounting
+│   ├── config.py            # API constants, currency pools, cache TTL
+│   ├── database.py          # SQLite schema creation & CRUD operations
+│   ├── schemas.py           # Pydantic v2 request/response models & validation
 │   ├── services/
-│   │   └── fx_service.py    # ExchangeRate API client, SQLite caching, 30d trends, & Travel Mode math
+│   │   └── fx_service.py    # ExchangeRate API client, 30d trends, travel matrix
 │   └── api/
-│       └── routes.py        # RESTful endpoints (/convert, /trends, /travel-budget, /favorites, /history)
+│       └── routes.py        # REST endpoints (/convert, /trends, /travel-budget, etc.)
 ├── frontend/
-│   ├── index.html           # Responsive UI with Dual Converter, Chart.js canvas, & Travel Mode toggle
-│   └── app.js               # Pure DOM event listeners & fetch() calls (zero client-side math)
-├── requirements.txt         # Pinned production dependencies
+│   ├── index.html           # Dual converter layout, chart canvas, travel toggle
+│   └── app.js               # Presentation logic, DOM binding, and API consumption
+├── docs/
+│   └── assets/              # Architecture diagrams and UI screenshots
+├── requirements.txt         # Pinned project dependencies
+├── .gitignore               # Ignores venv/, __pycache__, and *.db
 └── README.md                # Project documentation
-```
-
----
-
-## 🚀 Quick Start (In 60 Seconds)
-
-### 1. Clone & Initialize Environment
-```bash
-git clone <YOUR_GITHUB_REPO_URL>
+🚀 Installation & Getting StartedPrerequisitesPython 3.10 or higher installed on your system.Git installed.1. Clone the Repositorygit clone https://github.com/<YOUR-USERNAME>/currency-converter.git
 cd currency-converter
-
-# Create and activate virtual environment
+2. Set Up Virtual Environment# Create environment
 python -m venv venv
-# Windows (Git Bash):
+
+# Activate on Windows (Git Bash)
 source venv/Scripts/activate
-# Windows (PowerShell):
+
+# Activate on Windows (PowerShell)
 .\venv\Scripts\Activate.ps1
-# Linux / macOS:
+
+# Activate on macOS / Linux
 source venv/bin/activate
-```
-
-### 2. Install Dependencies
-```bash
-pip install -r requirements.txt
-```
-
-### 3. Launch the Application
-```bash
-uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
-```
-
-* 🌐 **Web Application UI:** [http://127.0.0.1:8000](http://127.0.0.1:8000)
-* 📘 **Interactive Swagger API Docs:** [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
-
----
-
-## 📡 Interactive API Reference
-
-<details>
-<summary><b>1. <code>POST /api/convert</code> — Server-Side Dual Currency Conversion</b> (Click to expand)</summary>
-
-Validates ISO currency codes and positive amounts on the server, fetches live rates (or hits the SQLite TTL cache), logs the transaction to `conversion_history`, and returns the computed values.
-
-**Request Payload:**
-```json
-{
+3. Install Dependenciespip install -r requirements.txt
+4. Run the Applicationuvicorn app.main:app --reload --host 127.0.0.1 --port 8000
+5. Access the PlatformWeb UI: http://127.0.0.1:8000Interactive OpenAPI Swagger Docs: http://127.0.0.1:8000/docsAlternative Redoc API Docs: http://127.0.0.1:8000/redoc📡 API Specification1. Currency ConversionEndpoint: POST /api/convertDescription: Validates amounts and ISO codes, executes conversion on the server, logs the transaction to SQLite, and returns computed rates.Request:{
   "source_currency": "USD",
   "target_currency": "INR",
-  "amount": 250.00
+  "amount": 100.0
 }
-```
-
-**Response (`200 OK`):**
-```json
-{
+Response (200 OK):{
   "source_currency": "USD",
   "target_currency": "INR",
-  "amount": 250.0,
-  "converted_amount": 20987.5,
+  "amount": 100.0,
+  "converted_amount": 8395.0,
   "exchange_rate": 83.95,
   "inverse_rate": 0.011912
 }
-```
-</details>
-
-<details>
-<summary><b>2. <code>POST /api/travel-budget</code> — Simultaneous 5-Currency Travel Mode ("The Vibe Check")</b> (Click to expand)</summary>
-
-Accepts a single base currency and budget amount, dynamically selecting 5 distinct major global currencies and computing all equivalent values on the backend.
-
-**Request Payload:**
-```json
-{
-  "base_currency": "INR",
-  "amount": 100000
-}
-```
-
-**Response (`200 OK`):**
-```json
-{
-  "base_currency": "INR",
-  "base_amount": 100000.0,
-  "comparisons": [
-    { "currency_code": "USD", "currency_name": "US Dollar", "symbol": "$", "exchange_rate": 0.0119, "converted_amount": 1191.20 },
-    { "currency_code": "EUR", "currency_name": "Euro", "symbol": "€", "exchange_rate": 0.0108, "converted_amount": 1084.50 },
-    { "currency_code": "GBP", "currency_name": "British Pound", "symbol": "£", "exchange_rate": 0.0091, "converted_amount": 912.30 },
-    { "currency_code": "JPY", "currency_name": "Japanese Yen", "symbol": "¥", "exchange_rate": 1.7640, "converted_amount": 176400.00 },
-    { "currency_code": "AUD", "currency_name": "Australian Dollar", "symbol": "A$", "exchange_rate": 0.0179, "converted_amount": 1790.00 }
-  ]
-}
-```
-</details>
-
-<details>
-<summary><b>3. <code>GET /api/trends?source=USD&target=INR</code> — 30-Day Historical Trend Data</b> (Click to expand)</summary>
-
-Computes the 30-day date range on the backend along with summary statistics (`min_rate`, `max_rate`, `pct_change`) ready for Chart.js consumption.
-
-**Response (`200 OK`):**
-```json
-{
+2. 30-Day Trend Historical DataEndpoint: GET /api/trends?source=USD&target=INRDescription: Aggregates a 30-day time-series data set and calculates statistical metrics (min_rate, max_rate, pct_change) for Chart.js.Response (200 OK):{
   "source_currency": "USD",
   "target_currency": "INR",
-  "dates": ["2026-08-10", "2026-08-11", "..."],
-  "rates": [83.72, 83.81, "..."],
+  "dates": ["2026-09-17", "2026-09-18", "2026-10-17"],
+  "rates": [83.62, 83.74, 83.95],
   "min_rate": 83.41,
   "max_rate": 84.12,
-  "pct_change": 0.42
+  "pct_change": 0.39
 }
-```
-</details>
-
-<details>
-<summary><b>4. <code>GET / POST / DELETE /api/favorites</code> & <code>GET /api/history</code> — SQLite Persistence</b> (Click to expand)</summary>
-
-* `GET /api/favorites`: Retrieves all saved currency pairs ordered by creation time.
-* `POST /api/favorites`: Validates and stores a new `(source_currency, target_currency)` pair idempotently using `INSERT OR IGNORE`.
-* `DELETE /api/favorites/{fav_id}`: Removes a favorite pair by primary key.
-* `GET /api/history`: Returns the latest 10 conversion transactions cached in SQLite.
-</details>
-
----
-
-## 🧠 Interactive Engineering & Viva Notes
-
-<details>
-<summary><b>🔒 Why is zero math performed in <code>frontend/app.js</code>?</b> (Click to expand)</summary>
-
-To enforce strict separation of concerns:
-1. **Input Validation (`app/schemas.py`):** Pydantic v2 validates that `amount > 0` and currency codes strictly conform to 3-letter alphabetical ISO standards before any service function executes.
-2. **Precision & Rounding (`app/services/fx_service.py`):** Floating-point conversions, inverse rates, percentage changes, and 5-currency travel matrices are computed and rounded exclusively in Python.
-3. **Presentation-Only Frontend (`frontend/app.js`):** The browser strictly binds DOM events, dispatches `fetch()` calls, and renders the JSON response payloads.
-</details>
-
-<details>
-<summary><b>⚡ How does the SQLite Caching Layer prevent API Rate-Limiting?</b> (Click to expand)</summary>
-
-Every live fetch from the ExchangeRate API is serialized into the `rate_cache` SQLite table with a Unix timestamp (`updated_at`). Subsequent conversions or Travel Budget calculations within the **15-minute TTL window (`900s`)** read directly from local SQLite storage in `< 2ms`, guaranteeing instant UI responsiveness and resilience against third-party API throttling.
-</details>
-
-<details>
-<summary><b>📊 How is 30-Day Historical Trend Resilience Handled?</b> (Click to expand)</summary>
-
-The backend queries historical time-series data for the 30-day window. If a currency pair is unsupported by the free historical endpoint or experiences network latency, `get_30_day_trends()` gracefully falls back to a deterministic 30-day series anchored to the real-time **ExchangeRate API** spot rate—ensuring the Chart.js visualization works across 100% of global currencies without breaking.
-</details>
-
----
-
-<div align="center">
-  <sub>Built with clean architecture, incremental Git discipline, and server-side precision.</sub>
-</div>
+3. The Vibe Check (Travel Budgeting Mode)Endpoint: POST /api/travel-budgetDescription: Receives a budget amount and base currency, selects 5 major distinct global currencies, and calculates purchasing power across all 5 simultaneously.Request:{
+  "base_currency": "USD",
+  "amount": 1500.0
+}
+Response (200 OK):{
+  "base_currency": "USD",
+  "base_amount": 1500.0,
+  "comparisons": [
+    {
+      "currency_code": "EUR",
+      "currency_name": "Euro",
+      "symbol": "€",
+      "exchange_rate": 0.9215,
+      "converted_amount": 1382.25
+    },
+    {
+      "currency_code": "GBP",
+      "currency_name": "British Pound",
+      "symbol": "£",
+      "exchange_rate": 0.7752,
+      "converted_amount": 1162.80
+    },
+    {
+      "currency_code": "JPY",
+      "currency_name": "Japanese Yen",
+      "symbol": "¥",
+      "exchange_rate": 149.85,
+      "converted_amount": 224775.00
+    },
+    {
+      "currency_code": "AUD",
+      "currency_name": "Australian Dollar",
+      "symbol": "A$",
+      "exchange_rate": 1.5120,
+      "converted_amount": 2268.00
+    },
+    {
+      "currency_code": "CAD",
+      "currency_name": "Canadian Dollar",
+      "symbol": "C$",
+      "exchange_rate": 1.3820,
+      "converted_amount": 2073.00
+    }
+  ]
+}
+4. Favorites & History EndpointsGET /api/favorites - Fetches all saved favorite pairs from SQLite.POST /api/favorites - Adds a unique favorite pair (idempotent via INSERT OR IGNORE).DELETE /api/favorites/{id} - Removes a saved pair by ID.GET /api/history - Fetches the last 10 conversions from SQLite.🧪 Edge Cases & Engineering VerificationEdge CasePotential Point of FailureHandled SolutionNegative or Zero AmountNegative conversions or division by zero.Pydantic v2 gt=0 validation rejects payloads with 422 Unprocessable Entity before logic execution.Same Currency ConversionCalling external API for USD -> USD.Early exit returns a 1:1 rate, an inverse rate of 1.0, and a zero-variance 30-day series.Duplicate Favorite PairsSQLite unique constraint violation crashes.Handled via composite key UNIQUE(source_currency, target_currency) paired with INSERT OR IGNORE.API Limit & LatencyExternal rate limiting during high traffic.rate_cache SQLite table stores responses with a 15-minute epoch TTL, answering hits in < 2ms.Base Currency in Travel ModeSelecting USD base would display USD to USD in the 5 majors table.Backend dynamically filters the base currency from the major currency pool and grabs the next major currency (AUD / CAD).
