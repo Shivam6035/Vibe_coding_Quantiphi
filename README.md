@@ -76,9 +76,10 @@ In global commerce and international travel, users require accurate exchange con
 ```
 
 > **UI Screenshot:**
-> Place your live application screenshot at `docs/assets/demo_screenshot.png` to display it automatically:
-> 
-> ![FX Pulse Application Demo](docs/assets/demo_screenshot.png)
+<img width="2558" height="1440" alt="image" src="https://github.com/user-attachments/assets/618bab6d-32f1-479d-bce6-85c7c4325694" />
+<img width="2510" height="1510" alt="image" src="https://github.com/user-attachments/assets/234fc20a-4642-4629-968d-0510cf39055f" />
+
+
 
 ---
 
