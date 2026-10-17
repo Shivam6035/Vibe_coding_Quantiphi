@@ -1,0 +1,20 @@
+currency-converter/
+├── app/
+│   ├── __init__.py
+│   ├── main.py              # FastAPI app initialization, CORS, static/template mounting
+│   ├── config.py            # API keys, constants (5 Major Currencies list), DB URL
+│   ├── database.py          # SQLite connection & table initialization
+│   ├── models.py            # SQLite schema (ConversionHistory, FavoritePair, RateCache)
+│   ├── schemas.py           # Pydantic request/response validation models
+│   ├── services/
+│   │   ├── fx_service.py    # ExchangeRate API integration, caching, 30-day trend logic
+│   │   └── calc_service.py  # Server-side math: Dual conversion & Travel Budgeting table
+│   └── api/
+│       └── routes.py        # REST endpoints (/convert, /trends, /favorites, /history, /travel-budget)
+├── frontend/
+│   ├── index.html           # Clean UI: Dual Converter, Travel Toggle, Chart Canvas, Favorites
+│   └── app.js               # DOM event listeners & fetch() calls ONLY (zero business logic)
+├── .env.example             # Template for API key
+├── .gitignore               # Ignore venv/, __pycache__, *.db, .env
+├── requirements.txt         # fastapi, uvicorn, httpx, pydantic, python-dotenv
+└── README.md                # Setup instructions & architecture overview

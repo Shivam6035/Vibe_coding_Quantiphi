@@ -1,0 +1,15 @@
+# Web Framework & ASGI Server
+fastapi==0.115.0
+uvicorn[standard]==0.30.6
+
+# Server-Side Validation & Settings
+pydantic==2.9.2
+python-dotenv==1.0.1
+
+# HTTP Client for ExchangeRate API
+httpx==0.27.2
+requests==2.32.3
+
+# Optional: Static File & Template Support
+jinja2==3.1.4
+aiofiles==24.1.0
