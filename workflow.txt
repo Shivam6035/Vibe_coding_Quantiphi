@@ -1,0 +1,10 @@
+# 1. Create the environment named "Vibe" with Python 3.12
+conda create --name Vibe python=3.12 -y
+
+# 2. Activate the environment
+conda activate Vibe
+
+# create requirement.tx
+
+# create file
+
